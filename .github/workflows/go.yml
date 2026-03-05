@@ -31,4 +31,10 @@ jobs:
         args: controllers/ database/ models/ routes/
       
     - name: Test
+      env:
+        DB_HOST: localhost
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_NAME: postgres
+        DB_PORT: 5432
       run: go test -v main_test.go
