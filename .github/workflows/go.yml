@@ -22,7 +22,9 @@ jobs:
         go-version: '1.22'
 
     - name: Inicia banco
-      run:  docker compose up -d postgres
+      run: |
+        docker compose up -d postgres
+        sleep 10
 
     - name: Lint
       uses: golangci/golangci-lint-action@v9
