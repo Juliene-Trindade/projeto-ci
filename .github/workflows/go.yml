@@ -5,27 +5,48 @@ name: Integração Contínua
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-
   ci:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.22'
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"
 
-    - name: Inicia banco
-      run:  docker compose up -d postgres
+      - name: Lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.10
+          args: controllers/ database/ models/ routes/
 
-    - name: Lint
-      run: docker run --rm -it -v $(CURDIR):/app -w /app golangci/golangci-lint golangci-lint run controllers/ database/ models/ routes/
-      
-    - name: Test
-      run: go test -v main_test.go
+      - name: Test
+        env:
+          DB_HOST: localhost
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: postgres
+          DB_PORT: 5432
+        run: go test -v main_test.go
